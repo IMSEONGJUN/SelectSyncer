@@ -118,9 +118,10 @@ final class CardMainController: UIViewController {
     }
     
     private func bind() {
-        viewModel.selectedCards.bind { [weak self] (_) in
-            self?.selectedCardCollection.reloadData()
-            self?.cardSeletCollection.collection.reloadData()
+        viewModel.selectedCards.bind { [weak self] _ in
+            guard let self = self else { return }
+            self.selectedCardCollection.reloadData()
+            self.cardSeletCollection.collection.reloadData()
         }
     }
     
@@ -183,7 +184,6 @@ final class CardMainController: UIViewController {
             }
             
             frameAnimator.addCompletion { _ in
-                self.visible = !self.visible
                 self.runningAnimations.removeAll()
             }
             
@@ -217,6 +217,8 @@ final class CardMainController: UIViewController {
             self.selectedCardCollection.transform = CGAffineTransform(translationX: 0, y: -UIHelper.totalUpperSideHeight)
             self.cardSelectCollectionContainer.transform = CGAffineTransform(translationX: 0, y: -UIHelper.totalUpperSideHeight)
             self.cardSeletCollection.collection.contentInset.bottom = self.view.safeAreaInsets.top + self.view.safeAreaInsets.bottom
+        } completion: { (_) in
+            self.visible = false
         }
     }
     
@@ -226,6 +228,8 @@ final class CardMainController: UIViewController {
             self.selectedCardCollection.transform = .identity
             self.cardSelectCollectionContainer.transform = .identity
             self.cardSeletCollection.collection.contentInset.bottom = self.view.safeAreaInsets.top + UIHelper.totalUpperSideHeight + UIHelper.menuBarHeight
+        } completion: { (_) in
+            self.visible = true
         }
     }
 }
