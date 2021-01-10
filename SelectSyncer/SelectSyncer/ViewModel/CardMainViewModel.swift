@@ -32,7 +32,8 @@ final class CardMainViewModel {
     
     func checkCardIsSelected(card: Card) -> Card? {
         var modifiedCard = card
-        if let index = self.selectedCards.value.firstIndex(where: { $0 == card }) {
+        let selectedCards = self.selectedCards.value.compactMap({$0})
+        if let index = selectedCards.firstIndex(where: { $0 == card }) {
             modifiedCard.isSelected = true
             modifiedCard.selectedOrderNumber = index + 1
         } else {
