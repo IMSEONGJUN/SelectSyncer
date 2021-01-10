@@ -7,15 +7,31 @@
 
 import Foundation
 
+class Bindable<T> {
+    var value: T {
+        didSet {
+            observer?(value)
+        }
+    }
+    
+    init(value: T) {
+        self.value = value
+    }
+    
+    private var observer: ((T) -> Void)?
+    
+    func bind(observer: @escaping (T) -> Void) {
+        self.observer = observer
+    }
+}
 
-class CardMainViewModel {
+final class CardMainViewModel {
     
     var selectedCards = Bindable<[Card?]>(value: [nil, nil, nil, nil, nil, nil])
     let defaultCards = DefaultLetters.AtoZ
     
     func checkCardIsSelected(card: Card) -> Card? {
         var modifiedCard = card
-    
         if let index = self.selectedCards.value.firstIndex(where: { $0 == card }) {
             modifiedCard.isSelected = true
             modifiedCard.selectedOrderNumber = index + 1
@@ -55,18 +71,4 @@ class CardMainViewModel {
     }
 }
 
-class Bindable<T> {
-    var value: T {
-        didSet {
-            observer?(value)
-        }
-    }
-    init(value: T) {
-        self.value = value
-    }
-    private var observer: ((T) -> Void)?
-    
-    func bind(observer: @escaping (T) -> Void) {
-        self.observer = observer
-    }
-}
+

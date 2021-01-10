@@ -13,12 +13,13 @@ protocol CardSelectViewControllerDelegate: class {
     func moveToOriginalPosition()
 }
 
-class CardSelectViewController: UIViewController {
+final class CardSelectViewController: UIViewController {
 
-    let viewModel: CardMainViewModel
+    // MARK: - Properties
+    private let viewModel: CardMainViewModel
     weak var delegate: CardSelectViewControllerDelegate?
     
-    let hideButton: UIButton = {
+    private let hideButton: UIButton = {
        let btn = UIButton()
         btn.setTitle("숨김", for: .normal)
         btn.backgroundColor = #colorLiteral(red: 0.9276365638, green: 0.1862117052, blue: 0.4215507805, alpha: 1)
@@ -28,7 +29,7 @@ class CardSelectViewController: UIViewController {
         return btn
     }()
 
-    let showButton: UIButton = {
+    private let showButton: UIButton = {
        let btn = UIButton()
         btn.setTitle("보임", for: .normal)
         btn.backgroundColor = #colorLiteral(red: 0.9276365638, green: 0.1862117052, blue: 0.4215507805, alpha: 1)
@@ -38,7 +39,7 @@ class CardSelectViewController: UIViewController {
         return btn
     }()
 
-    let resetButton: UIButton = {
+    private let resetButton: UIButton = {
        let btn = UIButton()
         btn.setTitle("초기화", for: .normal)
         btn.backgroundColor = #colorLiteral(red: 0.9276365638, green: 0.1862117052, blue: 0.4215507805, alpha: 1)
@@ -48,9 +49,11 @@ class CardSelectViewController: UIViewController {
         return btn
     }()
     
-    var stack: UIStackView!
+    private var stack: UIStackView!
     var collection: UICollectionView!
     
+    
+    // MARK: - Life cycle
     init(viewModel: CardMainViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
@@ -67,7 +70,9 @@ class CardSelectViewController: UIViewController {
         configureCollectionView()
     }
     
-    func configureTopMenu() {
+    
+    // MARK: - Initial Setup
+    private func configureTopMenu() {
         stack = UIStackView(arrangedSubviews: [hideButton, showButton, resetButton])
         stack.axis = .horizontal
         stack.distribution = .fillEqually
@@ -79,15 +84,15 @@ class CardSelectViewController: UIViewController {
             .height(equalToconstant: 44)
     }
     
-    func configureCollectionView() {
+    private func configureCollectionView() {
         collection = UICollectionView(frame: view.frame,
-                                                collectionViewLayout: UIHelper.createThreeColumnFlowLayout(in: view))
+                                      collectionViewLayout: UIHelper.createThreeColumnFlowLayout(in: view))
         view.addSubview(collection)
         collection.backgroundColor = .white
         collection.dataSource = self
         collection.delegate = self
         collection.register(CardCell.self,
-                                      forCellWithReuseIdentifier: String(describing: CardCell.self))
+                            forCellWithReuseIdentifier: String(describing: CardCell.self))
         collection.contentInset.bottom = statusBarHeight + UIHelper.totalUpperSideHeight + UIHelper.menuBarHeight + view.safeAreaInsets.bottom 
         collection.layout
             .top(equalTo: stack.bottomAnchor)
@@ -96,20 +101,24 @@ class CardSelectViewController: UIViewController {
             .bottom()
     }
     
-    @objc func didTapHide() {
+    
+    // MARK: - Action Handler
+    @objc private func didTapHide() {
         delegate?.hideSelectedCollection()
     }
     
-    @objc func didTapShow() {
+    @objc private func didTapShow() {
         delegate?.showSelectedCollection()
     }
     
-    @objc func didTapReset() {
+    @objc private func didTapReset() {
         viewModel.reset()
         delegate?.moveToOriginalPosition()
     }
 }
 
+
+// MARK: - UICollectionViewDataSource
 extension CardSelectViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return viewModel.defaultCards.count
@@ -124,6 +133,7 @@ extension CardSelectViewController: UICollectionViewDataSource {
     }
 }
 
+// MARK: - UICollectionViewDelegateFlowLayout
 extension CardSelectViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let cell = collectionView.cellForItem(at: indexPath) as? CardCell, let card = cell.card else { return }

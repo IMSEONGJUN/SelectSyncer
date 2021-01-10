@@ -86,13 +86,13 @@
 		CEA54FAF25A99469003D5868 /* SelectSyncer */ = {
 			isa = PBXGroup;
 			children = (
-				CE8ACDC725A9F4FF002D2F77 /* Extension */,
 				CEA54FC525A99515003D5868 /* Support */,
 				CEA54FCE25A997BD003D5868 /* Utils */,
 				CEA54FC825A9953B003D5868 /* View */,
 				CEA54FC625A9951D003D5868 /* Controller */,
 				CEA54FC925A99542003D5868 /* ViewModel */,
 				CEA54FC725A9952E003D5868 /* Model */,
+				CE8ACDC725A9F4FF002D2F77 /* Extension */,
 				CEA54FB625A99469003D5868 /* Main.storyboard */,
 				CEA54FB925A9946A003D5868 /* Assets.xcassets */,
 				CEA54FBB25A9946A003D5868 /* LaunchScreen.storyboard */,

@@ -9,25 +9,42 @@ import UIKit
 
 final class CardMainController: UIViewController {
 
-    var selectedCardCollection: UICollectionView!
+    private enum State {
+        case show
+        case hide
+    }
     
-    lazy var cardSeletCollection = CardSelectViewController(viewModel: viewModel)
-    let cardSelectCollectionContainer = UIView()
+    // MARK: - Properties
+    private var visible = true
+    private var nextState: State {
+        return visible ? .hide : .show
+    }
     
-    let viewModel = CardMainViewModel()
+    private var runningAnimations = [UIViewPropertyAnimator]()
+    private var animationProgressWhenInterrupted: CGFloat = 0
     
+    private var selectedCardCollection: UICollectionView!
+    private lazy var cardSeletCollection = CardSelectViewController(viewModel: viewModel)
+    private let cardSelectCollectionContainer = UIView()
     private var statusCoverBar: UIView!
-    
-    let separatorView: UIView = {
+    private let separatorView: UIView = {
        let view = UIView()
         view.backgroundColor = #colorLiteral(red: 0.9370916486, green: 0.9369438291, blue: 0.9575446248, alpha: 1)
+        let label = UILabel()
+        label.text = "이 영역은 스크롤 시 숨겨집니다"
+        label.font = UIFont.systemFont(ofSize: 15, weight: .bold)
+        label.textAlignment = .center
+        view.addSubview(label)
+        label.layout.centerX().centerY()
         return view
     }()
     
+    private let viewModel = CardMainViewModel()
+    
+    
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
-        
         configureUI()
         setupLongPressGestureRecognizer()
         bind()
@@ -37,8 +54,11 @@ final class CardMainController: UIViewController {
         super.viewDidAppear(animated)
         configureStatusBar()
     }
-     
-    func configureUI() {
+    
+    
+    // MARK: - Initial Setup
+    private func configureUI() {
+        view.backgroundColor = .systemBackground
         configureResultCollection()
         configureSeparatorView()
         configureCardSelectCollectionContainer()
@@ -52,7 +72,7 @@ final class CardMainController: UIViewController {
         window?.addSubview(statusBar)
     }
     
-    func configureResultCollection() {
+    private func configureResultCollection() {
         selectedCardCollection = UICollectionView(frame: .zero, collectionViewLayout: UIHelper.createThreeColumnFlowLayout(in: view))
         selectedCardCollection.dataSource = self
         selectedCardCollection.delegate = self
@@ -66,11 +86,9 @@ final class CardMainController: UIViewController {
             .leading()
             .trailing()
             .height(equalToconstant: UIHelper.resultCollectionViewHeight)
-//        selectedCardCollectionTopConst = selectedCardCollection.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor)
-//        selectedCardCollectionTopConst.isActive = true
     }
     
-    func configureSeparatorView() {
+    private func configureSeparatorView() {
         view.addSubview(separatorView)
         separatorView.layout
             .top(equalTo: selectedCardCollection.bottomAnchor)
@@ -78,10 +96,10 @@ final class CardMainController: UIViewController {
             .height(equalToconstant: UIHelper.separatorHeight)
     }
     
-    func configureCardSelectCollectionContainer() {
+    private func configureCardSelectCollectionContainer() {
         view.addSubview(cardSelectCollectionContainer)
-        cardSelectCollectionContainer.addGestureRecognizer(UIPanGestureRecognizer(target: self, action: #selector(handlePanGesture(_:))))
-        cardSelectCollectionContainer.isUserInteractionEnabled = true
+        cardSelectCollectionContainer.addGestureRecognizer(UIPanGestureRecognizer(target: self,
+                                                                                  action: #selector(handlePanGesture(_:))))
         cardSelectCollectionContainer.layout
             .top(equalTo: separatorView.bottomAnchor)
             .leading()
@@ -92,27 +110,29 @@ final class CardMainController: UIViewController {
         add(childVC: cardSeletCollection, to: cardSelectCollectionContainer)
     }
     
-    func add(childVC: UIViewController, to containerView: UIView) {
+    private func add(childVC: UIViewController, to containerView: UIView) {
         addChild(childVC)
         containerView.addSubview(childVC.view)
         childVC.view.frame = containerView.bounds
         childVC.didMove(toParent: self)
     }
     
-    func bind() {
+    private func bind() {
         viewModel.selectedCards.bind { [weak self] (_) in
             self?.selectedCardCollection.reloadData()
             self?.cardSeletCollection.collection.reloadData()
         }
     }
     
-    func setupLongPressGestureRecognizer() {
+    private func setupLongPressGestureRecognizer() {
         let gesture = UILongPressGestureRecognizer(target: self,
                                                    action: #selector(reorderCollectionViewItem(_:)))
         gesture.minimumPressDuration = 0.5
         selectedCardCollection.addGestureRecognizer(gesture)
     }
     
+    
+    // MARK: - Action Handler
     @objc private func reorderCollectionViewItem(_ sender: UILongPressGestureRecognizer) {
         let location = sender.location(in: selectedCardCollection)
     
@@ -131,34 +151,67 @@ final class CardMainController: UIViewController {
         }
     }
     
-    @objc func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
-        let translation = gesture.translation(in: cardSelectCollectionContainer)
-        
+    @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
+        let translation = gesture.translation(in: view)
         switch gesture.state {
         case .began:
-            view.superview?.subviews.forEach({ $0.layer.removeAllAnimations() })
+            if (visible && translation.y > 0) || (!visible && translation.y < 0){
+                break
+            }
+            startInteractiveTransition(state: nextState, duration: 0.5)
         case .changed:
-            if cardSelectCollectionContainer.frame.minY >= view.safeAreaInsets.top
-                && cardSelectCollectionContainer.frame.minY <= view.safeAreaInsets.top + UIHelper.totalUpperSideHeight {
-                separatorView.transform = CGAffineTransform(translationX: 0, y: translation.y)
-                selectedCardCollection.transform = CGAffineTransform(translationX: 0, y: translation.y)
-                cardSelectCollectionContainer.transform = CGAffineTransform(translationX: 0, y: translation.y)
-            }
-            
-//            gesture.setTranslation(CGPoint(x: 0, y: 0), in: view)
-            
+            var fractionComplete = translation.y / (statusBarHeight + UIHelper.totalUpperSideHeight)
+            fractionComplete = visible ? -fractionComplete : fractionComplete
+            updateInteractiveTransition(fractionCompleted: fractionComplete)
         case .ended:
-            if translation.y < 0 {
-                hideUpperCollection()
-            } else {
-                showUpperCollection()
-            }
+            continueInteractiveTransition()
         default:
             break
         }
     }
     
-    func hideUpperCollection() {
+    // MARK: - Animation Helper
+    private func animateTransitionIfNeeded(state: State, duration: TimeInterval) {
+        if runningAnimations.isEmpty {
+            let frameAnimator = UIViewPropertyAnimator(duration: duration, dampingRatio: 1) {
+                switch state {
+                case .hide:
+                    self.hideUpperCollection()
+                case .show:
+                    self.showUpperCollection()
+                }
+            }
+            
+            frameAnimator.addCompletion { _ in
+                self.visible = !self.visible
+                self.runningAnimations.removeAll()
+            }
+            
+            frameAnimator.startAnimation()
+            runningAnimations.append(frameAnimator)
+        }
+    }
+    
+    private func startInteractiveTransition(state: State, duration: TimeInterval) {
+        if runningAnimations.isEmpty {
+            animateTransitionIfNeeded(state: state, duration: duration)
+        }
+        
+        for animator in runningAnimations {
+            animator.pauseAnimation()
+            animationProgressWhenInterrupted = animator.fractionComplete
+        }
+    }
+    
+    private func updateInteractiveTransition(fractionCompleted: CGFloat) {
+        runningAnimations.forEach({ $0.fractionComplete = fractionCompleted + animationProgressWhenInterrupted })
+    }
+    
+    private func continueInteractiveTransition() {
+        runningAnimations.forEach({ $0.continueAnimation(withTimingParameters: nil, durationFactor: 0) })
+    }
+    
+    private func hideUpperCollection() {
         UIView.animate(withDuration: 0.5) {
             self.separatorView.transform = CGAffineTransform(translationX: 0, y: -UIHelper.totalUpperSideHeight)
             self.selectedCardCollection.transform = CGAffineTransform(translationX: 0, y: -UIHelper.totalUpperSideHeight)
@@ -167,7 +220,7 @@ final class CardMainController: UIViewController {
         }
     }
     
-    func showUpperCollection() {
+    private func showUpperCollection() {
         UIView.animate(withDuration: 0.5) {
             self.separatorView.transform = .identity
             self.selectedCardCollection.transform = .identity
@@ -177,6 +230,8 @@ final class CardMainController: UIViewController {
     }
 }
 
+
+// MARK: - UICollectionViewDataSource
 extension CardMainController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return viewModel.selectedCards.value.count
@@ -194,6 +249,8 @@ extension CardMainController: UICollectionViewDataSource {
     }
 }
 
+
+// MARK: - UICollectionViewDelegateFlowLayout
 extension CardMainController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView,
                         moveItemAt sourceIndexPath: IndexPath,
@@ -207,6 +264,8 @@ extension CardMainController: UICollectionViewDelegateFlowLayout {
     }
 }
 
+
+// MARK: - CardSelectViewControllerDelegate
 extension CardMainController: CardSelectViewControllerDelegate {
     func hideSelectedCollection() {
         hideUpperCollection()

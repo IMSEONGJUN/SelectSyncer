@@ -7,7 +7,7 @@
 
 import UIKit
 
-class CardCell: UICollectionViewCell {
+final class CardCell: UICollectionViewCell {
     
     var card: Card? {
         didSet{
@@ -15,7 +15,7 @@ class CardCell: UICollectionViewCell {
         }
     }
     
-    let containerView: UIView = {
+    private let containerView: UIView = {
        let view = UIView()
         view.backgroundColor = .white
         view.layer.borderWidth = 0.5
@@ -23,13 +23,13 @@ class CardCell: UICollectionViewCell {
         return view
     }()
     
-    let letterLabel: UILabel = {
+    private let letterLabel: UILabel = {
        let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 18, weight: .bold)
         return label
     }()
     
-    let orderNumberLabel: UILabel = {
+    private let orderNumberLabel: UILabel = {
        let label = UILabel()
         label.backgroundColor = .black
         label.textColor = .white
@@ -50,7 +50,7 @@ class CardCell: UICollectionViewCell {
         orderNumberLabel.isHidden = true
     }
     
-    func configureUI() {
+    private func configureUI() {
         contentView.addSubview(containerView)
         containerView.frame = contentView.bounds
         
@@ -71,7 +71,7 @@ class CardCell: UICollectionViewCell {
         orderNumberLabel.isHidden = true
     }
     
-    func configureCell(_ card: Card?) {
+    private func configureCell(_ card: Card?) {
         guard let card = card else { return }
         letterLabel.text = card.letter
         orderNumberLabel.isHidden = !card.isSelected

@@ -23,6 +23,7 @@ struct UIHelper {
         let availableWidth = collectionViewWidth - ((itemSpacing * (itemsInLine - 1)) + (inset.left + inset.right))
         let itemWidth = availableWidth / itemsInLine
         resultCollectionViewHeight = itemWidth * 2 + 1
+        
         let flowLayout = UICollectionViewFlowLayout()
         flowLayout.minimumInteritemSpacing = itemSpacing
         flowLayout.minimumLineSpacing = lineSpacing
