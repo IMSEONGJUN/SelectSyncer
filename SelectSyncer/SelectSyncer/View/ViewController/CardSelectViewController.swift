@@ -16,7 +16,7 @@ protocol CardSelectViewControllerDelegate: class {
 final class CardSelectViewController: UIViewController {
 
     // MARK: - Properties
-    private let viewModel: CardMainViewModel
+    private weak var viewModel: CardMainViewModel!
     weak var delegate: CardSelectViewControllerDelegate?
     
     private let hideButton: UIButton = {
@@ -81,7 +81,7 @@ final class CardSelectViewController: UIViewController {
             .top()
             .leading()
             .trailing()
-            .height(equalToconstant: 44)
+            .height(equalToconstant: UIHelper.menuBarHeight)
     }
     
     private func configureCollectionView() {

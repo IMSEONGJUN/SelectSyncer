@@ -154,6 +154,9 @@ final class CardMainController: UIViewController {
     
     @objc private func handlePanGesture(_ gesture: UIPanGestureRecognizer) {
         let translation = gesture.translation(in: view)
+        var fractionComplete = translation.y / (statusBarHeight + UIHelper.totalUpperSideHeight)
+        fractionComplete = visible ? -fractionComplete : fractionComplete
+        
         switch gesture.state {
         case .began:
             if (visible && translation.y > 0) || (!visible && translation.y < 0){
@@ -161,10 +164,15 @@ final class CardMainController: UIViewController {
             }
             startInteractiveTransition(state: nextState, duration: 0.5)
         case .changed:
-            var fractionComplete = translation.y / (statusBarHeight + UIHelper.totalUpperSideHeight)
-            fractionComplete = visible ? -fractionComplete : fractionComplete
             updateInteractiveTransition(fractionCompleted: fractionComplete)
         case .ended:
+            if abs(fractionComplete) < 0.5 {
+                runningAnimations.forEach({
+                    $0.isReversed = true
+                })
+                visible.toggle()
+            }
+            
             continueInteractiveTransition()
         default:
             break
