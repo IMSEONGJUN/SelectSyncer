@@ -40,19 +40,18 @@ final class CardMainViewModel {
             modifiedCard.isSelected = false
             modifiedCard.selectedOrderNumber = nil
         }
-
+        
         return modifiedCard
     }
     
     func updateSelectedCards(card: Card) {
         var card = card
-        if selectedCards.value.contains(card) {
+        
+        if let index = selectedCards.value.firstIndex(of: card) {
             card.isSelected = false
             card.selectedOrderNumber = nil
-            if let index = selectedCards.value.firstIndex(of: card) {
-                selectedCards.value.remove(at: index)
-                selectedCards.value.append(nil)
-            }
+            selectedCards.value.remove(at: index)
+            selectedCards.value.append(nil)
             return
         }
         
