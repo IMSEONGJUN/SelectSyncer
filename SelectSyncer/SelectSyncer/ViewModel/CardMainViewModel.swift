@@ -30,8 +30,8 @@ final class CardMainViewModel {
     var selectedCards = Bindable<[Card?]>(value: [nil, nil, nil, nil, nil, nil])
     let defaultCards = DefaultLetters.AtoZ
     
-    func checkCardIsSelected(card: Card) -> Card? {
-        var modifiedCard = card
+    func checkCardIsSelected(card: Card?) -> Card? {
+        guard var modifiedCard = card else { return nil }
         let selectedCards = self.selectedCards.value.compactMap({$0})
         if let index = selectedCards.firstIndex(where: { $0 == card }) {
             modifiedCard.isSelected = true

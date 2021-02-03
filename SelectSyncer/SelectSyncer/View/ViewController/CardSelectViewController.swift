@@ -16,7 +16,7 @@ protocol CardSelectViewControllerDelegate: AnyObject {
 final class CardSelectViewController: UIViewController {
 
     // MARK: - Properties
-    private weak var viewModel: CardMainViewModel!
+    private weak var viewModel: CardMainViewModel?
     weak var delegate: CardSelectViewControllerDelegate?
     
     private let hideButton: UIButton = {
@@ -112,7 +112,7 @@ final class CardSelectViewController: UIViewController {
     }
     
     @objc private func didTapReset() {
-        viewModel.reset()
+        viewModel?.reset()
         delegate?.moveToOriginalPosition()
     }
 }
@@ -121,14 +121,14 @@ final class CardSelectViewController: UIViewController {
 // MARK: - UICollectionViewDataSource
 extension CardSelectViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return viewModel.defaultCards.count
+        return viewModel?.defaultCards.count ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: String(describing: CardCell.self),
                                                       for: indexPath) as! CardCell
-        let card = viewModel.defaultCards[indexPath.row]
-        cell.card = viewModel.checkCardIsSelected(card: card)
+        let card = viewModel?.defaultCards[indexPath.row]
+        cell.card = viewModel?.checkCardIsSelected(card: card)
         return cell
     }
 }
@@ -137,7 +137,7 @@ extension CardSelectViewController: UICollectionViewDataSource {
 extension CardSelectViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let cell = collectionView.cellForItem(at: indexPath) as? CardCell, let card = cell.card else { return }
-        viewModel.updateSelectedCards(card: card)
+        viewModel?.updateSelectedCards(card: card)
     }
 }
 
