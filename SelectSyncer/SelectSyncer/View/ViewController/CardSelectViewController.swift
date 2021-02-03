@@ -7,7 +7,7 @@
 
 import UIKit
 
-protocol CardSelectViewControllerDelegate: class {
+protocol CardSelectViewControllerDelegate: AnyObject {
     func hideSelectedCollection()
     func showSelectedCollection()
     func moveToOriginalPosition()
