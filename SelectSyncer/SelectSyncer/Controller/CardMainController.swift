@@ -58,7 +58,6 @@ final class CardMainController: UIViewController {
     
     // MARK: - Initial Setup
     private func configureUI() {
-        view.backgroundColor = .systemBackground
         configureResultCollection()
         configureSeparatorView()
         configureCardSelectCollectionContainer()
